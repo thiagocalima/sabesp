@@ -1,11 +1,9 @@
-from __future__ import print_function
-
+#! /usr/bin/python
 import sys
-import json
 import requests
 import re
 import time
-# from lxml import html
+from lxml import html
 from datetime import timedelta, date, datetime
 
 def toString(obj):
@@ -28,6 +26,7 @@ def daterange(start_date, end_date):
         yield start_date + timedelta(n)
 
 def get_data(cmbDia, cmbMes, cmbAno):
+    csvfile = open('sistemasSabesp.csv', 'a')
     url = 'http://www2.sabesp.com.br/mananciais/DivulgacaoSiteSabesp.aspx'
     header = {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -89,25 +88,27 @@ def get_data(cmbDia, cmbMes, cmbAno):
 
             if (count > 2):
                 count = 0
-                # csvfile.write(cmbDia + "/" + cmbMes + "/" + cmbAno + ";" + sistemas[sistemaIndex] + ";" + result + "\n")
+                csvfile.write(cmbDia + "/" + cmbMes + "/" + cmbAno + ";" + sistemas[sistemaIndex] + ";" + result + "\n")
                 sistemaIndex = sistemaIndex + 1
                 result = ''
+
+    csvfile.close()
 
     # Esperando alguns segundos para coletar proximo batch
     # time.sleep(10)
 
-
-#def main (event, context):
-def main ():
+def main():
+    
     today = datetime.now()
     start_date = date(2003, 1, 1)
-    end_date = date(today.year, today.month, today.day)
+    end_date = date (today.year, today.month, today.day)
 
-    day = str(end_date.strftime("%d")).lstrip('0')
-    month = str(end_date.strftime("%m")).lstrip('0')
-    year = str(end_date.strftime("%Y"))
-
-    get_data(day, month, year)
+    for single_date in daterange(start_date, end_date):
+        day = str(single_date.strftime("%d")).lstrip('0')
+        month = str(single_date.strftime("%m")).lstrip('0')
+        year = str(single_date.strftime("%Y"))
+        
+        get_data(day, month, year)
 
 if __name__ == '__main__':
     sys.exit(main())
