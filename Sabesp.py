@@ -25,8 +25,13 @@ def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):
         yield start_date + timedelta(n)
 
-def get_data(cmbDia, cmbMes, cmbAno):
-    csvfile = open('sistemasSabesp.csv', 'a')
+def get_data(cmbDia, cmbMes, cmbAno, csvfile):
+    try:
+        csvfile = open(csvfile, 'a')
+    except IOError, e:
+        print ("Failed to find file " + csvfile)
+        sys.exit(1)
+
     url = 'http://www2.sabesp.com.br/mananciais/DivulgacaoSiteSabesp.aspx'
     header = {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -108,7 +113,7 @@ def main():
         month = str(single_date.strftime("%m")).lstrip('0')
         year = str(single_date.strftime("%Y"))
         
-        get_data(day, month, year)
+        get_data(day, month, year, sys.argv[1])
 
 if __name__ == '__main__':
     sys.exit(main())
