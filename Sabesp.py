@@ -62,9 +62,11 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
     try:
         response = requests.post(url, data = form_data, headers = header)
         htmlContent = toString(response.content)
-    except:
-        ConnectionError, e:
-            time.sleep(120)
+    except ConnectionError, e:
+        time.sleep(120)
+        response = requests.post(url, data = form_data, headers = header)
+        htmlContent = toString(response.content)
+
 
     tree = html.fromstring(htmlContent.decode('utf-8'))
 
@@ -109,7 +111,7 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
 def main():
     
     today = datetime.now()
-    start_date = date(2006, 4, 1)
+    start_date = date(2006, 4, 2)
     end_date = date (today.year, today.month, today.day)
 
     for single_date in daterange(start_date, end_date):
