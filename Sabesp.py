@@ -59,9 +59,13 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
                     'Imagebutton1.y': '13'
                 }
 
-    response = requests.post(url, data = form_data, headers = header)
+    try:
+        response = requests.post(url, data = form_data, headers = header)
+        htmlContent = toString(response.content)
+    except:
+        ConnectionError, e:
+            time.sleep(120)
 
-    htmlContent = toString(response.content)
     tree = html.fromstring(htmlContent.decode('utf-8'))
 
     count = 0
@@ -100,12 +104,12 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
     csvfile.close()
 
     # Esperando alguns segundos para coletar proximo batch
-    # time.sleep(10)
+    time.sleep(10)
 
 def main():
     
     today = datetime.now()
-    start_date = date(2003, 1, 1)
+    start_date = date(2006, 4, 1)
     end_date = date (today.year, today.month, today.day)
 
     for single_date in daterange(start_date, end_date):
