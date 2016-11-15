@@ -5,9 +5,28 @@ import re
 import time
 from lxml import html
 from datetime import timedelta, date, datetime
+import redis
+
+def getKeyValue(redisPool, variable_name):
+    redisServer = redis.Redis(connection_pool=redisPool)
+    response = redisServer.get(variable_name)
+    
+    return response
+
+
+def setKeyValue(redisPool, variable_name, variable_value):
+    redisServer = redis.Redis(connection_pool=redisPool)
+    redisServer.set(variable_name, variable_value)
+
+
+def delKeyValue(redisPool, variable_name, variable_value):
+    redisServer = redis.Redis(connection_pool=redisPool)
+    redisServer.delete(variable_name, variable_value)
+
 
 def toString(obj):
     return ''.join(obj)
+
 
 def parseValue(value):
     revalue = re.compile('[0-9]+\,[0-9]*')
@@ -15,15 +34,18 @@ def parseValue(value):
     
     return value
 
+
 def convertValueToNumber(value):
     value = toString(value)
     value = value.replace(",", ".")
 
     return value * 1
 
+
 def daterange(start_date, end_date):
     for n in range(int ((end_date - start_date).days)):
         yield start_date + timedelta(n)
+
 
 def get_data(cmbDia, cmbMes, cmbAno, csvfile):
     try:
@@ -50,23 +72,18 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
                     'Rio Claro'
                 ]
     form_data = {
-                    '__VIEWSTATE':'/wEPDwUJNDM2NTc5MjA3D2QWAgIBD2QWCGYPDxYCHgRUZXh0BQowMy8wMS8yMDE2ZGQCAQ8QZA8WH2YCAQICAgMCBAIFAgYCBwIIAgkCCgILAgwCDQIOAg8CEAIRAhICEwIUAhUCFgIXAhgCGQIaAhsCHAIdAh4WHxAFATEFATFnEAUBMgUBMmcQBQEzBQEzZxAFATQFATRnEAUBNQUBNWcQBQE2BQE2ZxAFATcFATdnEAUBOAUBOGcQBQE5BQE5ZxAFAjEwBQIxMGcQBQIxMQUCMTFnEAUCMTIFAjEyZxAFAjEzBQIxM2cQBQIxNAUCMTRnEAUCMTUFAjE1ZxAFAjE2BQIxNmcQBQIxNwUCMTdnEAUCMTgFAjE4ZxAFAjE5BQIxOWcQBQIyMAUCMjBnEAUCMjEFAjIxZxAFAjIyBQIyMmcQBQIyMwUCMjNnEAUCMjQFAjI0ZxAFAjI1BQIyNWcQBQIyNgUCMjZnEAUCMjcFAjI3ZxAFAjI4BQIyOGcQBQIyOQUCMjlnEAUCMzAFAjMwZxAFAjMxBQIzMWdkZAICDxBkDxYMZgIBAgICAwIEAgUCBgIHAggCCQIKAgsWDBAFA2phbgUBMWcQBQNmZXYFATJnEAUDbWFyBQEzZxAFA2FicgUBNGcQBQNtYWkFATVnEAUDanVuBQE2ZxAFA2p1bAUBN2cQBQNhZ28FAThnEAUDc2V0BQE5ZxAFA291dAUCMTBnEAUDbm92BQIxMWcQBQNkZXoFAjEyZ2RkAgMPEGQPFg5mAgECAgIDAgQCBQIGAgcCCAIJAgoCCwIMAg0WDhAFBDIwMTYFBDIwMTZnEAUEMjAxNQUEMjAxNWcQBQQyMDE0BQQyMDE0ZxAFBDIwMTMFBDIwMTNnEAUEMjAxMgUEMjAxMmcQBQQyMDExBQQyMDExZxAFBDIwMTAFBDIwMTBnEAUEMjAwOQUEMjAwOWcQBQQyMDA4BQQyMDA4ZxAFBDIwMDcFBDIwMDdnEAUEMjAwNgUEMjAwNmcQBQQyMDA1BQQyMDA1ZxAFBDIwMDQFBDIwMDRnEAUEMjAwMwUEMjAwM2dkZBgBBR5fX0NvbnRyb2xzUmVxdWlyZVBvc3RCYWNrS2V5X18WAQUMSW1hZ2VidXR0b24x8WdutFK5Le++2jWcURTQSEnKz3I=',
-                    '__EVENTVALIDATION':'/wEWOwLpkqXvBgKD1676AgKC1676AgKB1676AgKA1676AgKH1676AgKG1676AgKF1676AgKU1676AgKb1676AgKD1+75AgKD1+L5AgKD1+b5AgKD19r5AgKD1975AgKD19L5AgKD19b5AgKD18r5AgKD1476AgKD14L6AgKC1+75AgKC1+L5AgKC1+b5AgKC19r5AgKC1975AgKC19L5AgKC19b5AgKC18r5AgKC1476AgKC14L6AgKB1+75AgKB1+L5AgKX1/L8BwKW1/L8BwKV1/L8BwKU1/L8BwKT1/L8BwKS1/L8BwKR1/L8BwKA1/L8BwKP1/L8BwKX17L/BwKX177/BwKX17r/BwLOr4vcDQLOr//wBgLOr+OVDwLOr9euCALOr7tDAs6vr+QJAs6vk7kCAqWWoaAFAqWWlcUNAqWWuawLAqWWrcEDAqWWkZoMAqWWhb8FAqWW6dMNAtLCmbQIz0MOMHTs34kAum/fHTWwFy9+gUc=',
+                    '__VIEWSTATE':'A5VhumZhJMOVECoKmhuRbL+Do2a+QBpoIpipoW/vhIQv/4H+rOrMuDhreixzRFZst3PJzOauIVcOnkCecSYp+yhDdc+zuAbzottn+I7FnYc+MG6m8RpB6XtDmeRhUfe71Vn8udWKqvsE5l43o52rZS8BaQa0wx9tqFTAt6sENaBrWgBkzmOfSMVtF5n1UXIC3dMzugeY2QFObMghVlVYD74yEYLe+FfX8NgJks1EszFN3i1mfyA2B5Ur+wwsCpPv+6xvQtMS0TkDiReWdtyGHPcONupS26Mv7hqrnIOje9LYb5IMBVZfGjJDmxcoHjKRzLM8gyDzbzhKhMUlwS4dbtDZFC/BCnHxjrfK6FkM15TemqsWdU+j+7YYHX0V6A2nW7tAlVltJ2VImSk7aAhkRkJQZqoHKIsdIzG6vaJrPYDAA+5HCs/fhflcukH+Vhp9TpLbfPNXbOsNvPLTFI7LMUauyFT1MSZYkAlD1/bxRx48tblzlCpcIZEeQPsCk4Df02pMFIU3e3LmkCyjj6AnK8cTh9U/C9TXdQpPrqUcmH9yZLWE2WRbT0ZUsPf8q9EX6ajQLKfw9VqiMwpFt2oPMwQAlDaR+sRum0rTrCxg4wNQWK8ey3erhOZ+gES+8MA/jJ69NC/H+wTRA6b+2oiPbEnl5kAiUwVuoTDMv2pcWXnc/P2EorFFf7S+rDyS81S7i7xHUDDXiwYFkdNML6qdUUJc5ayzC3S4iC3DukPzOxTdGc4CiD+DLI5q3QapE6evh3ebF5rRnXGAWrQeb3/TJtzW8VIqwrIXi84FfcKWI0Q2XdIkJsxsxQi+Z5qJxS4M6awNSjpOQ7CHYht0GXh9vdNC4+zHN57DuiI1bLbmw2xaH7ZjNrohJBvAVd6l/rnjoJTvZHPrQOG7bvKGlj6Kwc+GbQqnONIdXeiYgC1y/cNQo78TE007wcrcsg01Kcv6N4tlaNP6/JanrMUjE7s+CsHCW1AIp54IpvWyj76D94Pq0OusU3eaX3rQNB0HbduuzsxpkkKo+fEgY6dL1u7ZtjfTV5Fyj2uMA/PET9CxP9DhCzOiRgCV05j+1L5b+c/3in92EGKksVKqFF2tNhFnUBTHVauqCMddBqBFFYRddHf7SBdRagbHQxkBNlzdot4ygunpo74FGBM1JhXBEmgEaEH70ZA0ZjCPofMU7Ju2HyuY6R8N7dLyOWs7wNC2wMU2d8Th8w==',
+                    '__EVENTVALIDATION':'Ria5iwOm75okX8MEEkiLkl6i//GcHlEPiEMbw+Qp6Mjs89lArQr+UQn+apTmd/RmYeT3u+6KMZWiRbXnwhOTTSBleP0v2nmHHlj6cfNbuXGRUAjDe+3BkTZ7n/lWF9ukWDQ7X9wa0NfMsRhfERH+jR71imIBXEvOGt7LOpkvNPk+ectN+4tDY2N/bD9I9/XY6q4Ef2bkcKRtxzGGIzN0kNgmH3/bNvjEZZDBuQLw+QIKS6vrk1GkK+eOJSi17uT/bL2fQixUX8s2/m2FxYvucqRCbGv+GWaE329Z+AWZdnNjuPotbfGeFllblRmoia+3h0Ld8M4RtxF4/0G7iGMnxtadad/K1GSNNBKqAu9v43Q1XvUnre9MGxtRh1f7VZK1q/ErjK5CFGKGCcJkwbJ1z1nboC56yin/1J6/o3fRKHEvjRXROb+QOMW1YxPoqaoDhMaDJSbwYxJxFNHZwe5liNiRTAL7Rko7EmGeMYRI2SaFjV6pFAXc1nDNwlJVAVQS9tbEBtaicztyivFDcH9lpclY5zrmiSBYJ0nTxV24Hm7PNBvQ',
+                    '__VIEWSTATEENCRYPTED':'',
                     'cmbDia': cmbDia,
                     'cmbMes': cmbMes,
                     'cmbAno': cmbAno,
-                    'Imagebutton1.x': '8',
-                    'Imagebutton1.y': '13'
+                    'Imagebutton1.x': '7',
+                    'Imagebutton1.y': '12'
                 }
 
-    try:
-        response = requests.post(url, data = form_data, headers = header)
-        htmlContent = toString(response.content)
-    except ConnectionError, e:
-        time.sleep(120)
-        response = requests.post(url, data = form_data, headers = header)
-        htmlContent = toString(response.content)
-
+    response = requests.post(url, data = form_data, headers = header)
+    htmlContent = toString(response.content)
 
     tree = html.fromstring(htmlContent.decode('utf-8'))
 
@@ -106,13 +123,15 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
     csvfile.close()
 
     # Esperando alguns segundos para coletar proximo batch
-    time.sleep(10)
+    #time.sleep(10)
+
 
 def main():
+    redisPool = redis.ConnectionPool(host='172.17.0.2', port=6379, db=0)
     
     today = datetime.now()
-    start_date = date(2006, 4, 2)
-    end_date = date (today.year, today.month, today.day)
+    start_date = date(2003, 6, 21)
+    end_date = date(today.year, today.month, today.day)
 
     for single_date in daterange(start_date, end_date):
         day = str(single_date.strftime("%d")).lstrip('0')
@@ -120,6 +139,7 @@ def main():
         year = str(single_date.strftime("%Y"))
         
         get_data(day, month, year, sys.argv[1])
+
 
 if __name__ == '__main__':
     sys.exit(main())
