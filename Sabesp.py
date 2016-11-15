@@ -145,6 +145,7 @@ def get_data(cmbDia, cmbMes, cmbAno):
 
     
     redisSet("last", cmbDia  + cmbMes + cmbAno)
+
     # Esperando alguns segundos para coletar proximo batch
     #time.sleep(10)
 
@@ -155,15 +156,14 @@ def getLast():
 
 def main():    
     today = datetime.now()
-    start_date = date(2003, 6, 21)
-    end_date = date(today.year, today.month, today.day)
+    startDate = datetime.strptime(getLast(), '%d%m%Y')
+    endDate = date(today.year, today.month, today.day)
 
-    for single_date in daterange(start_date, end_date):
+    for single_date in daterange(startDate, endDate):
         day = str(single_date.strftime("%d")).lstrip('0')
         month = str(single_date.strftime("%m")).lstrip('0')
         year = str(single_date.strftime("%Y"))
         
-        #get_data(day, month, year, sys.argv[1])
         get_data(day, month, year)
 
 
