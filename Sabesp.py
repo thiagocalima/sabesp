@@ -70,7 +70,7 @@ def daterange(start_date, end_date):
         yield start_date + timedelta(n)
 
 
-def get_data(cmbDia, cmbMes, cmbAno):
+def getData(cmbDia, cmbMes, cmbAno):
     url = 'http://www2.sabesp.com.br/mananciais/DivulgacaoSiteSabesp.aspx'
     header = {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -144,7 +144,7 @@ def get_data(cmbDia, cmbMes, cmbAno):
                 result = ''
 
     
-    redisSet("last", cmbDia  + cmbMes + cmbAno)
+    redisSet("last", cmbDia + "/" + cmbMes + "/" + cmbAno)
 
     # Esperando alguns segundos para coletar proximo batch
     #time.sleep(10)
@@ -159,17 +159,17 @@ def main():
     
     if (getLast() is None):
         startDate = date(2003, 6, 21)
-    elif:
+    elif (getLast() is not None):
         startDate = datetime.strptime(getLast(), '%d/%m/%Y')
     
     endDate = date(today.year, today.month, today.day)
 
-    for single_date in daterange(startDate, endDate):
-        day = str(single_date.strftime("%d")).lstrip('0')
-        month = str(single_date.strftime("%m")).lstrip('0')
-        year = str(single_date.strftime("%Y"))
+    for singleDate in daterange(startDate, endDate):
+        day = str(singleDate.strftime("%d")).lstrip('0')
+        month = str(singleDate.strftime("%m")).lstrip('0')
+        year = str(singleDate.strftime("%Y"))
         
-        get_data(day, month, year)
+        getData(day, month, year)
 
 
 if __name__ == '__main__':
