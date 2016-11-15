@@ -7,21 +7,40 @@ from lxml import html
 from datetime import timedelta, date, datetime
 import redis
 
-def getKeyValue(redisPool, variable_name):
+def redisGet(redisPool, variable_name):
     redisServer = redis.Redis(connection_pool=redisPool)
     response = redisServer.get(variable_name)
-    
+
     return response
 
 
-def setKeyValue(redisPool, variable_name, variable_value):
+def redisSet(redisPool, variable_name, variable_value):
     redisServer = redis.Redis(connection_pool=redisPool)
     redisServer.set(variable_name, variable_value)
 
 
-def delKeyValue(redisPool, variable_name, variable_value):
+def redisDel(redisPool, variable_name, variable_value):
     redisServer = redis.Redis(connection_pool=redisPool)
     redisServer.delete(variable_name, variable_value)
+
+
+def redisHSet(redisPool, variable_name, variable_key, variable_value):
+    redisServer = redis.Redis(connection_pool=redisPool)
+    redisServer.hset(variable_name, variable_key, variable_value)
+
+
+def redisHGet(redisPool, variable_name, variable_key):
+    redisServer = redis.Redis(connection_pool=redisPool)
+    response = redisServer.hget(variable_name, variable_key)
+
+    return response
+
+
+def redisHGet(redisPool, variable_name):
+    redisServer = redis.Redis(connection_pool=redisPool)
+    response = redisServer.hgetall(variable_name)
+
+    return response
 
 
 def toString(obj):
@@ -48,11 +67,12 @@ def daterange(start_date, end_date):
 
 
 def get_data(cmbDia, cmbMes, cmbAno, csvfile):
-    try:
-        csvfile = open(csvfile, 'a')
-    except IOError, e:
-        print ("Failed to find file " + csvfile)
-        sys.exit(1)
+    redisPool = redis.ConnectionPool(host='172.17.0.2', port=6379, db=0)
+    #try:
+    #    csvfile = open(csvfile, 'a')
+    #except IOError, e:
+    #    print ("Failed to find file " + csvfile)
+    #    sys.exit(1)
 
     url = 'http://www2.sabesp.com.br/mananciais/DivulgacaoSiteSabesp.aspx'
     header = {
@@ -116,19 +136,20 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
 
             if (count > 2):
                 count = 0
-                csvfile.write(cmbDia + "/" + cmbMes + "/" + cmbAno + ";" + sistemas[sistemaIndex] + ";" + result + "\n")
+    #            csvfile.write(cmbDia + "/" + cmbMes + "/" + cmbAno + ";" + sistemas[sistemaIndex] + ";" + result + "\n")
+                redisChave = sistemas[sistemaIndex] + ":" cmbDia  + cmbMes + cmbAno
+                redisValor = result
+                redisSet(redisPool, redisChave, redisValor)
                 sistemaIndex = sistemaIndex + 1
                 result = ''
 
-    csvfile.close()
+    #csvfile.close()
 
     # Esperando alguns segundos para coletar proximo batch
     #time.sleep(10)
 
 
-def main():
-    redisPool = redis.ConnectionPool(host='172.17.0.2', port=6379, db=0)
-    
+def main():    
     today = datetime.now()
     start_date = date(2003, 6, 21)
     end_date = date(today.year, today.month, today.day)
