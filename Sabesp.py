@@ -136,7 +136,7 @@ def get_data(cmbDia, cmbMes, cmbAno):
             if (count > 2):
                 count = 0
 
-                redisChave = sistemas[sistemaIndex] + ":" + cmbDia  + cmbMes + cmbAno
+                redisChave = sistemas[sistemaIndex] + ":" + cmbDia + "/" + cmbMes + "/" + cmbAno
                 redisValor = result
                 redisSet(redisChave, redisValor)
                 
@@ -156,7 +156,12 @@ def getLast():
 
 def main():    
     today = datetime.now()
-    startDate = datetime.strptime(getLast(), '%d%m%Y')
+    
+    if (getLast() is None):
+        startDate = date(2003, 6, 21)
+    elif:
+        startDate = datetime.strptime(getLast(), '%d/%m/%Y')
+    
     endDate = date(today.year, today.month, today.day)
 
     for single_date in daterange(startDate, endDate):
