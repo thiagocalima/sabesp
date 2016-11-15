@@ -156,6 +156,7 @@ def getData(cmbDia, cmbMes, cmbAno):
 
                 for key, value in indices.items():
                     redisHSet(redisChave, key, value)
+                    indices[key] = None
                 
                 sistemaIndex = sistemaIndex + 1
 
