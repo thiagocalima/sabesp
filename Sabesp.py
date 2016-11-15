@@ -7,36 +7,40 @@ from lxml import html
 from datetime import timedelta, date, datetime
 import redis
 
-def redisGet(redisPool, variable_name):
+
+redisPool = redis.ConnectionPool(host='172.17.0.2', port=6379, db=0)
+
+
+def redisGet(variable_name):
     redisServer = redis.Redis(connection_pool=redisPool)
     response = redisServer.get(variable_name)
 
     return response
 
 
-def redisSet(redisPool, variable_name, variable_value):
+def redisSet(variable_name, variable_value):
     redisServer = redis.Redis(connection_pool=redisPool)
     redisServer.set(variable_name, variable_value)
 
 
-def redisDel(redisPool, variable_name, variable_value):
+def redisDel(variable_name, variable_value):
     redisServer = redis.Redis(connection_pool=redisPool)
     redisServer.delete(variable_name, variable_value)
 
 
-def redisHSet(redisPool, variable_name, variable_key, variable_value):
+def redisHSet(variable_name, variable_key, variable_value):
     redisServer = redis.Redis(connection_pool=redisPool)
     redisServer.hset(variable_name, variable_key, variable_value)
 
 
-def redisHGet(redisPool, variable_name, variable_key):
+def redisHGet(variable_name, variable_key):
     redisServer = redis.Redis(connection_pool=redisPool)
     response = redisServer.hget(variable_name, variable_key)
 
     return response
 
 
-def redisHGet(redisPool, variable_name):
+def redisHGet(variable_name):
     redisServer = redis.Redis(connection_pool=redisPool)
     response = redisServer.hgetall(variable_name)
 
@@ -66,14 +70,7 @@ def daterange(start_date, end_date):
         yield start_date + timedelta(n)
 
 
-def get_data(cmbDia, cmbMes, cmbAno, csvfile):
-    redisPool = redis.ConnectionPool(host='172.17.0.2', port=6379, db=0)
-    #try:
-    #    csvfile = open(csvfile, 'a')
-    #except IOError, e:
-    #    print ("Failed to find file " + csvfile)
-    #    sys.exit(1)
-
+def get_data(cmbDia, cmbMes, cmbAno):
     url = 'http://www2.sabesp.com.br/mananciais/DivulgacaoSiteSabesp.aspx'
     header = {
                 'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',
@@ -129,24 +126,31 @@ def get_data(cmbDia, cmbMes, cmbAno, csvfile):
 
             if (count == 0):
                 result = str(valor) + result
-            elif (count > 0):
+            elif (count == 1):
+                result = str(valor) + ";" + result
+            elif (count == 2):
                 result = str(valor) + ";" + result
 
             count = count + 1
 
             if (count > 2):
                 count = 0
-    #            csvfile.write(cmbDia + "/" + cmbMes + "/" + cmbAno + ";" + sistemas[sistemaIndex] + ";" + result + "\n")
-                redisChave = sistemas[sistemaIndex] + ":" cmbDia  + cmbMes + cmbAno
+
+                redisChave = sistemas[sistemaIndex] + ":" + cmbDia  + cmbMes + cmbAno
                 redisValor = result
-                redisSet(redisPool, redisChave, redisValor)
+                redisSet(redisChave, redisValor)
+                
                 sistemaIndex = sistemaIndex + 1
                 result = ''
 
-    #csvfile.close()
-
+    
+    redisSet("last", cmbDia  + cmbMes + cmbAno)
     # Esperando alguns segundos para coletar proximo batch
     #time.sleep(10)
+
+
+def getLast():
+    return redisGet("last")
 
 
 def main():    
@@ -159,7 +163,8 @@ def main():
         month = str(single_date.strftime("%m")).lstrip('0')
         year = str(single_date.strftime("%Y"))
         
-        get_data(day, month, year, sys.argv[1])
+        #get_data(day, month, year, sys.argv[1])
+        get_data(day, month, year)
 
 
 if __name__ == '__main__':
