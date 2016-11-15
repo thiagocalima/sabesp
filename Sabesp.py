@@ -52,7 +52,6 @@ def toString(obj):
 
 
 def parseValue(value):
-    #revalue = re.compile('[0-9]+\,[0-9]*')
     revalue = re.compile('[-]*[0-9]+\,[0-9]*')
     value = revalue.findall(value)
     
